@@ -49,6 +49,8 @@ type Conversation
     @source(subgraph: "Conversation")
   messages: [Message!]!
     @source(subgraph: "Conversation")
+  project: Project!
+    @source(subgraph: "Conversation")
   projectId: String!
     @source(subgraph: "Conversation")
   topic: String!
@@ -70,11 +72,13 @@ type Message {
 
 type Project
   @variable(subgraph: "Project", name: "Project_id", select: "id")
+  @variable(subgraph: "Conversation", name: "Project_id", select: "id")
   @resolver(subgraph: "Project", select: "{ projectById(id: $Project_id) }", arguments: [ { name: "Project_id", type: "String!" } ]) {
   description: String!
     @source(subgraph: "Project")
   id: String!
     @source(subgraph: "Project")
+    @source(subgraph: "Conversation")
   name: String!
     @source(subgraph: "Project")
 }

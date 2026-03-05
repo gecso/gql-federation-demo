@@ -9,6 +9,7 @@ type Conversation {
   createdAt: DateTime!
   topic: String!
   messages: [Message!]!
+  project: Project!
 }
 
 type Message {
@@ -22,6 +23,10 @@ type Message {
 type Mutation {
   createConversation(projectId: String! topic: String!): Conversation!
   addMessage(conversationId: String! text: String! author: String!): Message!
+}
+
+type Project {
+  id: String!
 }
 
 type Query {

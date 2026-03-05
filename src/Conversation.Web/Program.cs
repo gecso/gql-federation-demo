@@ -9,7 +9,8 @@ builder.Services.AddSingleton<MessageStore>();
 builder.Services
 	.AddGraphQLServer()
 	.AddQueryType<ConversationQuery>()
-	.AddMutationType<ConversationMutation>();
+	.AddMutationType<ConversationMutation>()
+	.AddTypeExtension<ConversationResolvers>();
 
 var app = builder.Build();
 
