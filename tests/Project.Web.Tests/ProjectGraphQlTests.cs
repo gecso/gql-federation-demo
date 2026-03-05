@@ -1,71 +1,172 @@
-using Project.Web.GraphQL;
-using Project.Web.Storage;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Project.Web.Tests;
 
 public class ProjectGraphQlTests
 {
     [Fact]
-    public void GetProjects_ReturnsSeedProjects()
+    public async Task Root_Get_ReturnsHelloWorld()
     {
-        var store = new ProjectStore();
-        var query = new ProjectQuery();
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
 
-        var projects = query.GetProjects(store);
+        var response = await client.GetAsync("/");
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
 
-        Assert.Equal(2, projects.Count);
-        Assert.Contains(projects, p => p.Id == "p-1");
-        Assert.Contains(projects, p => p.Id == "p-2");
+        Assert.Equal("Hello World!", body);
     }
 
     [Fact]
-    public void GetProjectById_ReturnsProject_WhenExists()
+    public async Task GetProjects_ReturnsSeedProjects()
     {
-        var store = new ProjectStore();
-        var query = new ProjectQuery();
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
 
-        var project = query.GetProjectById("p-1", store);
+        const string gql = """
+                        query {
+                            projects {
+                                id
+                                name
+                                description
+                            }
+                        }
+                        """;
 
-        Assert.NotNull(project);
-        Assert.Equal("p-1", project!.Id);
-        Assert.Equal("Demo project", project.Name);
+        var root = await PostGraphQlAsync(client, gql);
+        var projects = root.GetProperty("data").GetProperty("projects");
+
+        Assert.Equal(2, projects.GetArrayLength());
+        Assert.Contains(projects.EnumerateArray(), p => p.GetProperty("id").GetString() == "p-1");
+        Assert.Contains(projects.EnumerateArray(), p => p.GetProperty("id").GetString() == "p-2");
     }
 
     [Fact]
-    public void GetProjectById_ReturnsNull_WhenNotFound()
+    public async Task GetProjectById_ReturnsProject_WhenExists()
     {
-        var store = new ProjectStore();
-        var query = new ProjectQuery();
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
 
-        var project = query.GetProjectById("missing-id", store);
+        const string gql = """
+                        query($id: String!) {
+                            projectById(id: $id) {
+                                id
+                                name
+                            }
+                        }
+                        """;
 
-        Assert.Null(project);
+        var root = await PostGraphQlAsync(client, gql, new { id = "p-1" });
+        var project = root.GetProperty("data").GetProperty("projectById");
+
+        Assert.Equal("p-1", project.GetProperty("id").GetString());
+        Assert.Equal("Demo project", project.GetProperty("name").GetString());
     }
 
     [Fact]
-    public void SearchProjectsByName_FindsProjects_CaseInsensitive()
+    public async Task GetProjectById_ReturnsNull_WhenNotFound()
     {
-        var store = new ProjectStore();
-        var query = new ProjectQuery();
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
 
-        var projects = query.SearchProjectsByName("demo", store);
+        const string gql = """
+                        query($id: String!) {
+                            projectById(id: $id) {
+                                id
+                            }
+                        }
+                        """;
 
-        Assert.Single(projects);
-        Assert.Equal("p-1", projects[0].Id);
+        var root = await PostGraphQlAsync(client, gql, new { id = "missing-id" });
+        var project = root.GetProperty("data").GetProperty("projectById");
+
+        Assert.Equal(JsonValueKind.Null, project.ValueKind);
     }
 
     [Fact]
-    public void CreateProject_AddsProject_AndCanBeFetchedById()
+    public async Task SearchProjectsByName_FindsProjects_CaseInsensitive()
     {
-        var store = new ProjectStore();
-        var mutation = new ProjectMutation();
-        var query = new ProjectQuery();
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
 
-        var created = mutation.CreateProject("GraphQL Gateway", "BFF project", store);
-        var fetched = query.GetProjectById(created.Id, store);
+        const string gql = """
+                        query($name: String!) {
+                            searchProjectsByName(name: $name) {
+                                id
+                            }
+                        }
+                        """;
 
-        Assert.NotNull(fetched);
-        Assert.Equal("GraphQL Gateway", fetched!.Name);
-        Assert.Equal("BFF project", fetched.Description);
+        var root = await PostGraphQlAsync(client, gql, new { name = "demo" });
+        var projects = root.GetProperty("data").GetProperty("searchProjectsByName");
+
+        Assert.Equal(1, projects.GetArrayLength());
+        Assert.Equal("p-1", projects[0].GetProperty("id").GetString());
+    }
+
+    [Fact]
+    public async Task CreateProject_AddsProject_AndCanBeFetchedById()
+    {
+        await using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient();
+
+        const string createGql = """
+                        mutation($name: String!, $description: String!) {
+                            createProject(name: $name, description: $description) {
+                                id
+                                name
+                                description
+                            }
+                        }
+                        """;
+
+        var createRoot = await PostGraphQlAsync(client, createGql, new { name = "GraphQL Gateway", description = "BFF project" });
+        var created = createRoot.GetProperty("data").GetProperty("createProject");
+        var createdId = created.GetProperty("id").GetString();
+
+        Assert.False(string.IsNullOrWhiteSpace(createdId));
+        Assert.Equal("GraphQL Gateway", created.GetProperty("name").GetString());
+
+        const string fetchGql = """
+                        query($id: String!) {
+                            projectById(id: $id) {
+                                id
+                                name
+                                description
+                            }
+                        }
+                        """;
+
+        var fetchRoot = await PostGraphQlAsync(client, fetchGql, new { id = createdId });
+        var fetched = fetchRoot.GetProperty("data").GetProperty("projectById");
+
+        Assert.Equal(createdId, fetched.GetProperty("id").GetString());
+        Assert.Equal("GraphQL Gateway", fetched.GetProperty("name").GetString());
+        Assert.Equal("BFF project", fetched.GetProperty("description").GetString());
+    }
+
+    private static async Task<JsonElement> PostGraphQlAsync(HttpClient client, string query, object? variables = null)
+    {
+        var payload = new
+        {
+            query,
+            variables
+        };
+
+        using var response = await client.PostAsJsonAsync("/graphql", payload);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(content);
+        var root = document.RootElement.Clone();
+
+        if (root.TryGetProperty("errors", out var errors))
+        {
+            Assert.Fail($"GraphQL returned errors: {errors}");
+        }
+
+        return root;
     }
 }

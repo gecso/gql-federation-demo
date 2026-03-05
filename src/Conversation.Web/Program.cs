@@ -17,3 +17,5 @@ app.MapGet("/", () => "Hello World!");
 app.MapGraphQL("/graphql");
 
 app.Run();
+
+public partial class Program;
