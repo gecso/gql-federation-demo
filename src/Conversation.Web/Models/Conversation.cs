@@ -1,10 +1,14 @@
 namespace Conversation.Web.Models;
 
-public class Conversation
+public sealed class Conversation
 {
-    public string Id { get; set; } = default!;
-    public string Title { get; set; } = default!;
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public List<Message> Messages { get; set; } = new();
+    public string Id { get; init; } = Guid.NewGuid().ToString("N");
+
+    public string ProjectId { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public string Topic { get; set; } = string.Empty;
+
+    public IReadOnlyList<Message> Messages { get; set; } = [];
 }

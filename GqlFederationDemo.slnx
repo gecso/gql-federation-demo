@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Conversation.Web/Conversation.Web.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Conversation.Web.IntegrationTests/Conversation.Web.IntegrationTests.csproj" />
-  </Folder>
-</Solution>

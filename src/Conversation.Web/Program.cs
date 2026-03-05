@@ -1,19 +1,19 @@
 using Conversation.Web.GraphQL;
-using Conversation.Web.Services;
+using Conversation.Web.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IConversationService, InMemoryConversationService>();
+builder.Services.AddSingleton<ConversationStore>();
+builder.Services.AddSingleton<MessageStore>();
 
 builder.Services
-    .AddGraphQLServer()
-    .AddQueryType<Query>()
-    .AddMutationType<Mutation>();
+	.AddGraphQLServer()
+	.AddQueryType<ConversationQuery>()
+	.AddMutationType<ConversationMutation>();
 
 var app = builder.Build();
 
-app.MapGraphQL();
+app.MapGet("/", () => "Hello World!");
+app.MapGraphQL("/graphql");
 
 app.Run();
-
-public partial class Program { }
