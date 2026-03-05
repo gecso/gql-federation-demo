@@ -1,0 +1,36 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Conversation {
+  id: String!
+  projectId: String!
+  createdAt: DateTime!
+  topic: String!
+  messages: [Message!]!
+}
+
+type Message {
+  id: String!
+  conversation: Conversation
+  createdAt: DateTime!
+  text: String!
+  author: String!
+}
+
+type Mutation {
+  createConversation(projectId: String! topic: String!): Conversation!
+  addMessage(conversationId: String! text: String! author: String!): Message!
+}
+
+type Query {
+  conversations(projectId: String topic: String): [Conversation!]!
+  conversationById(id: String!): Conversation
+}
+
+"The `@specifiedBy` directive is used within the type system definition language to provide a URL for specifying the behavior of custom scalar definitions."
+directive @specifiedBy("The specifiedBy URL points to a human-readable specification. This field will only read a result for scalar types." url: String!) on SCALAR
+
+"The `DateTime` scalar represents an ISO-8601 compliant date time type."
+scalar DateTime @specifiedBy(url: "https:\/\/www.graphql-scalars.com\/date-time")

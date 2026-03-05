@@ -1,0 +1,84 @@
+schema
+  @fusion(version: 1)
+  @transport(subgraph: "Project", group: "Fusion", location: "http:\/\/localhost:5249\/graphql", kind: "HTTP")
+  @transport(subgraph: "Conversation", group: "Fusion", location: "http:\/\/localhost:5102\/graphql", kind: "HTTP") {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  conversationById(id: String!): Conversation
+    @variable(subgraph: "Conversation", name: "id", argument: "id")
+    @resolver(subgraph: "Conversation", select: "{ conversationById(id: $id) }", arguments: [ { name: "id", type: "String!" } ])
+  conversations(projectId: String topic: String): [Conversation!]!
+    @variable(subgraph: "Conversation", name: "projectId", argument: "projectId")
+    @variable(subgraph: "Conversation", name: "topic", argument: "topic")
+    @resolver(subgraph: "Conversation", select: "{ conversations(projectId: $projectId, topic: $topic) }", arguments: [ { name: "projectId", type: "String" }, { name: "topic", type: "String" } ])
+  projectById(id: String!): Project
+    @variable(subgraph: "Project", name: "id", argument: "id")
+    @resolver(subgraph: "Project", select: "{ projectById(id: $id) }", arguments: [ { name: "id", type: "String!" } ])
+  projects: [Project!]!
+    @resolver(subgraph: "Project", select: "{ projects }")
+  searchProjectsByName(name: String!): [Project!]!
+    @variable(subgraph: "Project", name: "name", argument: "name")
+    @resolver(subgraph: "Project", select: "{ searchProjectsByName(name: $name) }", arguments: [ { name: "name", type: "String!" } ])
+}
+
+type Mutation {
+  addMessage(author: String! conversationId: String! text: String!): Message!
+    @variable(subgraph: "Conversation", name: "conversationId", argument: "conversationId")
+    @variable(subgraph: "Conversation", name: "text", argument: "text")
+    @variable(subgraph: "Conversation", name: "author", argument: "author")
+    @resolver(subgraph: "Conversation", select: "{ addMessage(conversationId: $conversationId, text: $text, author: $author) }", arguments: [ { name: "conversationId", type: "String!" }, { name: "text", type: "String!" }, { name: "author", type: "String!" } ])
+  createConversation(projectId: String! topic: String!): Conversation!
+    @variable(subgraph: "Conversation", name: "projectId", argument: "projectId")
+    @variable(subgraph: "Conversation", name: "topic", argument: "topic")
+    @resolver(subgraph: "Conversation", select: "{ createConversation(projectId: $projectId, topic: $topic) }", arguments: [ { name: "projectId", type: "String!" }, { name: "topic", type: "String!" } ])
+  createProject(description: String! name: String!): Project!
+    @variable(subgraph: "Project", name: "name", argument: "name")
+    @variable(subgraph: "Project", name: "description", argument: "description")
+    @resolver(subgraph: "Project", select: "{ createProject(name: $name, description: $description) }", arguments: [ { name: "name", type: "String!" }, { name: "description", type: "String!" } ])
+}
+
+type Conversation
+  @variable(subgraph: "Conversation", name: "Conversation_id", select: "id")
+  @resolver(subgraph: "Conversation", select: "{ conversationById(id: $Conversation_id) }", arguments: [ { name: "Conversation_id", type: "String!" } ]) {
+  createdAt: DateTime!
+    @source(subgraph: "Conversation")
+  id: String!
+    @source(subgraph: "Conversation")
+  messages: [Message!]!
+    @source(subgraph: "Conversation")
+  projectId: String!
+    @source(subgraph: "Conversation")
+  topic: String!
+    @source(subgraph: "Conversation")
+}
+
+type Message {
+  author: String!
+    @source(subgraph: "Conversation")
+  conversation: Conversation
+    @source(subgraph: "Conversation")
+  createdAt: DateTime!
+    @source(subgraph: "Conversation")
+  id: String!
+    @source(subgraph: "Conversation")
+  text: String!
+    @source(subgraph: "Conversation")
+}
+
+type Project
+  @variable(subgraph: "Project", name: "Project_id", select: "id")
+  @resolver(subgraph: "Project", select: "{ projectById(id: $Project_id) }", arguments: [ { name: "Project_id", type: "String!" } ]) {
+  description: String!
+    @source(subgraph: "Project")
+  id: String!
+    @source(subgraph: "Project")
+  name: String!
+    @source(subgraph: "Project")
+}
+
+"The `DateTime` scalar represents an ISO-8601 compliant date time type."
+scalar DateTime
+  @specifiedBy(url: "https:\/\/www.graphql-scalars.com\/date-time")

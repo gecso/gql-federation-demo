@@ -1,0 +1,20 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Mutation {
+  createProject(name: String! description: String!): Project!
+}
+
+type Project {
+  id: String!
+  name: String!
+  description: String!
+}
+
+type Query {
+  projects: [Project!]!
+  projectById(id: String!): Project
+  searchProjectsByName(name: String!): [Project!]!
+}

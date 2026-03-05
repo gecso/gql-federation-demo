@@ -1,9 +1,11 @@
 using ConversationModel = Conversation.Web.Models.Conversation;
 using MessageModel = Conversation.Web.Models.Message;
 using Conversation.Web.Storage;
+using HotChocolate;
 
 namespace Conversation.Web.GraphQL;
 
+[GraphQLName("Mutation")]
 public sealed class ConversationMutation
 {
     public ConversationModel CreateConversation(string projectId, string topic, [Service] ConversationStore store) =>

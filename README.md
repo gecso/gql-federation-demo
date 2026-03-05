@@ -45,3 +45,21 @@ type Message {
     author: String
 }
 ```
+
+## Fusion CLI workflow (без ручного SDL в BFF)
+
+1. Запустить subgraph сервисы:
+    - `Project.Web` на `http://localhost:5249/graphql`
+    - `Conversation.Web` на `http://localhost:5102/graphql`
+2. Сгенерировать gateway graph:
+    - `./scripts/fusion-compose.sh`
+3. BFF читает скомпозированный graph из файла:
+    - `src/BFF/fusion-gateway.graphql`
+
+### Быстрый запуск всех сервисов
+
+- Запуск всего стека: `./scripts/run-all.sh`
+- GraphQL endpoints:
+    - Project: `http://localhost:5249/graphql`
+    - Conversation: `http://localhost:5102/graphql`
+    - BFF (Fusion): `http://localhost:5100/graphql`

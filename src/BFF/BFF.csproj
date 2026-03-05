@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.12" />
+    <PackageReference Include="HotChocolate.Fusion" Version="15.1.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="fusion-gateway.graphql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

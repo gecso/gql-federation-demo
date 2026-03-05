@@ -1,10 +1,12 @@
-using BFF.GraphQL;
+using HotChocolate.Fusion;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
+
 builder.Services
-	.AddGraphQLServer()
-	.AddQueryType<BffQuery>();
+	.AddFusionGatewayServer()
+	.ConfigureFromFile("fusion-gateway.graphql", watchFileForUpdates: true);
 
 var app = builder.Build();
 

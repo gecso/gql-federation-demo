@@ -1,8 +1,10 @@
 using ConversationModel = Conversation.Web.Models.Conversation;
 using Conversation.Web.Storage;
+using HotChocolate;
 
 namespace Conversation.Web.GraphQL;
 
+[GraphQLName("Query")]
 public sealed class ConversationQuery
 {
     public IReadOnlyList<ConversationModel> GetConversations(
